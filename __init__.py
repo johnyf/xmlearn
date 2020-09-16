@@ -2,17 +2,17 @@
 """Library and CLI for learning about XML formats."""
 
 # Copyright (C) 2010  Ted Tibbetts
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -20,7 +20,7 @@ from lxml import etree
 
 class Dumper(object):
     """Dump an lxml.etree tree starting at `element`.
-    
+
     Attributes:
         maxdepth: the maximum recursion level.
         width: the width at which text will be wrapped.
@@ -39,7 +39,7 @@ class Dumper(object):
 
     from sys import stdout
     outstream = stdout
-        
+
     from pprint import PrettyPrinter
     pformat = PrettyPrinter(indent=2).pformat
 
@@ -55,7 +55,7 @@ class Dumper(object):
 
         If a `ruleset` is given, that ruleset's rules are output.
         If no `ruleset` is given, a list of rulesets is output.
-        
+
         The `verbose` option will cause full ruleset information
           to be given in the list of rulesets.
 
@@ -96,8 +96,8 @@ class Dumper(object):
     def format_element(self, element, depth, linebreak=False, with_text=True):
         from textwrap import dedent
         title = getattr(element.find('title'), 'text', '')
-        title = (title if title 
-                       else '[{0}]'.format(element.tag 
+        title = (title if title
+                       else '[{0}]'.format(element.tag
                                            if hasattr(element, 'tag') else ''))
         path = (element.getroottree().getpath(element)
                 if hasattr(element, 'getroottree')
@@ -114,7 +114,7 @@ class Dumper(object):
 
     def dump(self, element, **kwargs):
         """Dump `element` according to `ruleset`.
-        
+
         Keyword arguments:
             depth: the initial depth of the dump.  Normally this will be 0.
 
@@ -228,7 +228,7 @@ def iter_tag_list(bases):
 
 def build_tag_graph(bases):
     """Build a python-graph graph of the tag relationships.
-    
+
     `bases` is an element or iterable of elements.
     """
     from pygraph.classes.digraph import digraph
