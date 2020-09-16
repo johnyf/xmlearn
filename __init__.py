@@ -126,7 +126,7 @@ class Dumper(object):
         I suspect that actually using XSLT would be a better way to do this.
         """
         from copy import copy
-        from collections import Mapping
+        from collections.abc import Mapping
 
         depth = kwargs.pop('depth', 0)
         # Pull variables from kwargs or self
@@ -136,19 +136,19 @@ class Dumper(object):
         ruleset = kwargs.pop('ruleset', getattr(self, 'ruleset',
                                                 self.default_ruleset))
 
-        if isinstance(ruleset, basestring):
+        if isinstance(ruleset, str):
             ruleset = self.rulesets[ruleset]
         assert isinstance(ruleset, Mapping)
 
         def _dump(element, depth=0):
-            for rule in ruleset.iteritems():
+            for rule in ruleset.items():
                 if rule[0] == None:
                     default = copy(rule[1])
                 elif rule[0] == element.tag:
                     kwargs = copy(rule[1])
                     break
             else:
-                assert vars().has_key('default')
+                assert 'default' in vars()
                 kwargs = default
 
             recurse = kwargs.pop('recurse', False)
@@ -190,7 +190,7 @@ def iter_unique_child_tags(bases, tags):
     #   so we need to check for those specific types.
     bases, tags = (iter((param,)) if isinstance(param, type) else iter(param)
                    for (param, type) in ((bases, etree._Element),
-                                         (tags, basestring)))
+                                         (tags, str)))
 
     from itertools import product
     basetags = product(bases, tags)
@@ -285,7 +285,7 @@ def cli(args, in_, out, err, Dumper=Dumper):
     from argparse import ArgumentParser, FileType, Action
 
     parser = ArgumentParser()
-    parser.add_argument('-i', '--infile', type=FileType, default=in_,
+    parser.add_argument('-i', '--infile', type=FileType(), default=in_,
                         help='The XML file to learn about.\n'
                              'Defaults to stdin.')
     parser.add_argument('-p', '--path', default='/*', type=etree.XPath,
@@ -301,7 +301,7 @@ def cli(args, in_, out, err, Dumper=Dumper):
 
         def instantiate_dumper(ns):
             kw_from_ns = ['width', 'maxdepth', 'ruleset', 'outstream']
-            kwargs = dict((key, value) for key, value in ns.__dict__.iteritems()
+            kwargs = dict((key, value) for key, value in ns.__dict__.items()
                                        if key in kw_from_ns and value is not None)
             return ns.Dumper(**kwargs)
 
