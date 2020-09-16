@@ -231,12 +231,12 @@ def build_tag_graph(bases):
 
     `bases` is an element or iterable of elements.
     """
-    from pygraph.classes.digraph import digraph
+    import networkx as nx
 
-    g = digraph()
+    g = nx.DiGraph()
 
     tags = list(iter_tag_list(bases))
-    g.add_nodes(tags)
+    g.add_nodes_from(tags)
 
     # TODO: this is totally inefficient:
     #         it makes more sense to do each base separately,
@@ -244,7 +244,7 @@ def build_tag_graph(bases):
     #       The better way is to build the set of all bases' edges.
     for tag in tags:
         for child in iter_unique_child_tags(bases, tag):
-            g.add_edge((tag, child))
+            g.add_edge(tag, child)
 
     return g
 
@@ -253,11 +253,8 @@ def write_graph(graph, filename, format='svg'):
 
     `format` can be any of those supported by pydot.Dot.write().
     """
-    from pygraph.readwrite.dot import write
-    dotdata = write(graph)
-
-    from pydot import graph_from_dot_data
-    dotgraph = graph_from_dot_data(dotdata)
+    import networkx as nx
+    dotgraph = nx.drawing.nx_pydot.to_pydot(graph)
     dotgraph.write(filename, format=format)
 
 def write_tag_graph(bases, filename, format='png'):
