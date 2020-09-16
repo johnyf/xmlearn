@@ -15,8 +15,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from argparse import ArgumentParser, FileType, Action
+from collections.abc import Mapping
+from copy import copy, deepcopy
+from itertools import chain, product
+from pprint import PrettyPrinter
+from sys import argv, stdin, stdout, stderr
+from textwrap import dedent, wrap
 
 from lxml import etree
+import networkx as nx
+try:
+    import pydot
+except ImportError:
+    pydot = None
+
 
 class Dumper(object):
     """Dump an lxml.etree tree starting at `element`.
@@ -37,10 +50,7 @@ class Dumper(object):
 
     default_ruleset = 'full'
 
-    from sys import stdout
     outstream = stdout
-
-    from pprint import PrettyPrinter
     pformat = PrettyPrinter(indent=2).pformat
 
     # Some more defaults.
@@ -84,7 +94,6 @@ class Dumper(object):
         The text is indented 4 spaces for each level of depth.
         Wrapped lines are indented an extra 2 spaces.
         """
-        from textwrap import wrap
         depth = kwargs.pop('depth', 0)
         wrap_kwargs = dict({'initial_indent': '    ' * depth,
                             'subsequent_indent': '    ' * depth + '  '})
@@ -94,7 +103,6 @@ class Dumper(object):
         return "\n".join(wrap(*args, **wrap_kwargs))
 
     def format_element(self, element, depth, linebreak=False, with_text=True):
-        from textwrap import dedent
         title = getattr(element.find('title'), 'text', '')
         title = (title if title
                        else '[{0}]'.format(element.tag
@@ -125,9 +133,6 @@ class Dumper(object):
 
         I suspect that actually using XSLT would be a better way to do this.
         """
-        from copy import copy
-        from collections.abc import Mapping
-
         depth = kwargs.pop('depth', 0)
         # Pull variables from kwargs or self
         maxdepth, outstream = (kwargs.pop(v, getattr(self, v))
@@ -163,7 +168,6 @@ class Dumper(object):
         _dump(element, depth=depth)
 
 def clone(dict, **additions):
-    from copy import deepcopy
     copy = deepcopy(dict)
     copy.update(**additions)
     return copy
@@ -191,8 +195,6 @@ def iter_unique_child_tags(bases, tags):
     bases, tags = (iter((param,)) if isinstance(param, type) else iter(param)
                    for (param, type) in ((bases, etree._Element),
                                          (tags, str)))
-
-    from itertools import product
     basetags = product(bases, tags)
 
     tag_nodes = (node for base, tag in basetags
@@ -214,9 +216,6 @@ def iter_tag_list(bases):
     """
     bases = (iter((bases,)) if isinstance(bases, etree._Element)
                             else iter(bases))
-
-    from itertools import chain
-
     tags = (node.tag for base in bases
                      for node in base.iter()
                      if hasattr(node, 'tag'))
@@ -231,8 +230,6 @@ def build_tag_graph(bases):
 
     `bases` is an element or iterable of elements.
     """
-    import networkx as nx
-
     g = nx.DiGraph()
 
     tags = list(iter_tag_list(bases))
@@ -253,7 +250,6 @@ def write_graph(graph, filename, format='svg'):
 
     `format` can be any of those supported by pydot.Dot.write().
     """
-    import networkx as nx
     dotgraph = nx.drawing.nx_pydot.to_pydot(graph)
     dotgraph.write(filename, format=format)
 
@@ -278,9 +274,6 @@ def cli(args, in_, out, err, Dumper=Dumper):
 
     in_, out, err: open input/output/error files.
     """
-
-    from argparse import ArgumentParser, FileType, Action
-
     parser = ArgumentParser()
     parser.add_argument('-i', '--infile', type=FileType(), default=in_,
                         help='The XML file to learn about.\n'
@@ -407,12 +400,9 @@ def cli(args, in_, out, err, Dumper=Dumper):
     build_tags_parser(subparsers)
 
     def build_graph_parser(subparsers):
-        try:
-            from pydot import Dot
-            formats = Dot().formats
-        except ImportError:
+        if pydot is None:
             return
-
+        formats = pydot.Dot().formats
         p_graph = subparsers.add_parser('graph',
             help='Build a graph from the XML tags relationships.',
             description='Build a graph from the XML tags relationships.')
@@ -453,5 +443,4 @@ def cli(args, in_, out, err, Dumper=Dumper):
 
 
 if __name__ == '__main__':
-    from sys import argv, stdin, stdout, stderr
     cli(argv[1:], stdin, stdout, stderr)
